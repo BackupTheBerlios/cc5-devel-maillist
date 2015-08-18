@@ -1,0 +1,100 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<HTML>
+ <HEAD>
+   <TITLE> [Cc5-devel] Warning suppression proposal
+   </TITLE>
+   <LINK REL="Index" HREF="http://lists.berlios.de/pipermail/cc5-devel/2009-December/index.html" >
+   <LINK REL="made" HREF="mailto:cc5-devel%40lists.berlios.de?Subject=Re%3A%20%5BCc5-devel%5D%20Warning%20suppression%20proposal&In-Reply-To=%3C4B2D9AB1.4080704%40zaimoni.com%3E">
+   <META NAME="robots" CONTENT="index,nofollow">
+   <style type="text/css">
+       pre {
+           white-space: pre-wrap;       /* css-2.1, curent FF, Opera, Safari */
+           }
+   </style>
+   <META http-equiv="Content-Type" content="text/html; charset=us-ascii">
+   
+   
+ </HEAD>
+ <BODY BGCOLOR="#ffffff">
+   <H1>[Cc5-devel] Warning suppression proposal</H1>
+    <B>Kenneth 'Bessarion' Boyd</B> 
+    <A HREF="mailto:cc5-devel%40lists.berlios.de?Subject=Re%3A%20%5BCc5-devel%5D%20Warning%20suppression%20proposal&In-Reply-To=%3C4B2D9AB1.4080704%40zaimoni.com%3E"
+       TITLE="[Cc5-devel] Warning suppression proposal">zaimoni at zaimoni.com
+       </A><BR>
+    <I>Sun Dec 20 04:32:01 CET 2009</I>
+    <P><UL>
+        
+        
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#0">[ date ]</a>
+              <a href="thread.html#0">[ thread ]</a>
+              <a href="subject.html#0">[ subject ]</a>
+              <a href="author.html#0">[ author ]</a>
+         </LI>
+       </UL>
+    <HR>  
+<!--beginarticle-->
+<PRE>Jean-Marc,
+
+While studying how the current testing system works (I assume that 
+test_cl.exe and unit.exe are the test driver programs), I reviewed the 
+warnings from a full build of wpdcc.  The biggest things that jump out 
+at me are:
+====
+
+windows.c
+....
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(276) : warning C4033: 'win32_create_process' must return a value
+Generating Code...
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(281) : warning C4716: 'win32_create_process' : must return a value
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(286) : warning C4716: 'win32_wait_for_process' : must return a value
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(292) : warning C4716: 'win32_close_process' : must return a value
+
+Process.c
+....
+c:\cpp_app.svn\wpdcc\src\lang\process.c(64) : warning C4013: 'win32_create_process' undefined; assuming extern returning int
+....
+c:\cpp_app.svn\wpdcc\src\lang\process.c(69) : warning C4013: 'win32_wait_for_process' undefined; assuming extern returning int
+....
+c:\cpp_app.svn\wpdcc\src\lang\process.c(75) : warning C4013: 'win32_close_process' undefined; assuming extern returning int
+====
+I.e., we got lucky (the current behavior is pragmatically defined mainly because the return value is never used).
+
+Currently, all of win32_create_process, win32_wait_for_process, and win32_close_process return void* .  Is there an explicit design rationale for this?
+
+Ignoring for the moment how these would look on *NIX, my snap impression is as follows:
+* win32_create_process either succeeds or fails: reasonable return values 0 for failure, 1 for success; return type int32
+* win32_wait_process either succeeds or fails: reasonable return values 0 for failure, 1 for success; return type int32
+* win32_close_process: if this fails, that is a bug.  A reasonable return type is void.
+
+I would be using bool rather than int32, except that this has to work with C90.
+* Should I prepare a patch for review, for suppressing the mentioned warnings in win32/windows.c, by adjusting in the above direction 
+(and making counter-adjustments in win32/windows.h)?
+* If so, should this patch be debug-mode aware?
+
+Kenneth
+
+P.S.: I am planning to leave Process.c alone for this iteration.  I'd like win32/windows.h to be a bit cleaner before attempting #include &lt;win32/windows.h&gt;
+
+
+
+</PRE>
+
+<!--endarticle-->
+    <HR>
+    <P><UL>
+        <!--threads-->
+	
+	
+         <LI> <B>Messages sorted by:</B> 
+              <a href="date.html#0">[ date ]</a>
+              <a href="thread.html#0">[ thread ]</a>
+              <a href="subject.html#0">[ subject ]</a>
+              <a href="author.html#0">[ author ]</a>
+         </LI>
+       </UL>
+
+<hr>
+<a href="https://lists.berlios.de/mailman/listinfo/cc5-devel">More information about the Cc5-devel
+mailing list</a><br>
+</body></html>

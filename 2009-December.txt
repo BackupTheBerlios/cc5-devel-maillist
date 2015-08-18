@@ -1,0 +1,51 @@
+From zaimoni at zaimoni.com  Sun Dec 20 04:32:01 2009
+From: zaimoni at zaimoni.com (Kenneth 'Bessarion' Boyd)
+Date: Sat, 19 Dec 2009 21:32:01 -0600
+Subject: [Cc5-devel] Warning suppression proposal
+Message-ID: <4B2D9AB1.4080704@zaimoni.com>
+
+Jean-Marc,
+
+While studying how the current testing system works (I assume that 
+test_cl.exe and unit.exe are the test driver programs), I reviewed the 
+warnings from a full build of wpdcc.  The biggest things that jump out 
+at me are:
+====
+
+windows.c
+....
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(276) : warning C4033: 'win32_create_process' must return a value
+Generating Code...
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(281) : warning C4716: 'win32_create_process' : must return a value
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(286) : warning C4716: 'win32_wait_for_process' : must return a value
+c:\cpp_app.svn\wpdcc\src\win32\windows.c(292) : warning C4716: 'win32_close_process' : must return a value
+
+Process.c
+....
+c:\cpp_app.svn\wpdcc\src\lang\process.c(64) : warning C4013: 'win32_create_process' undefined; assuming extern returning int
+....
+c:\cpp_app.svn\wpdcc\src\lang\process.c(69) : warning C4013: 'win32_wait_for_process' undefined; assuming extern returning int
+....
+c:\cpp_app.svn\wpdcc\src\lang\process.c(75) : warning C4013: 'win32_close_process' undefined; assuming extern returning int
+====
+I.e., we got lucky (the current behavior is pragmatically defined mainly because the return value is never used).
+
+Currently, all of win32_create_process, win32_wait_for_process, and win32_close_process return void* .  Is there an explicit design rationale for this?
+
+Ignoring for the moment how these would look on *NIX, my snap impression is as follows:
+* win32_create_process either succeeds or fails: reasonable return values 0 for failure, 1 for success; return type int32
+* win32_wait_process either succeeds or fails: reasonable return values 0 for failure, 1 for success; return type int32
+* win32_close_process: if this fails, that is a bug.  A reasonable return type is void.
+
+I would be using bool rather than int32, except that this has to work with C90.
+* Should I prepare a patch for review, for suppressing the mentioned warnings in win32/windows.c, by adjusting in the above direction 
+(and making counter-adjustments in win32/windows.h)?
+* If so, should this patch be debug-mode aware?
+
+Kenneth
+
+P.S.: I am planning to leave Process.c alone for this iteration.  I'd like win32/windows.h to be a bit cleaner before attempting #include <win32/windows.h>
+
+
+
+
